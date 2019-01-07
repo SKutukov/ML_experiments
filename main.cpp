@@ -90,6 +90,8 @@ int main(int, char *[])
     std::string filename = "/home/skutukov/work/FactorMachine/full_norm_set.txt";
     std::vector<triplet> triplets = read_data(filename);
 
+    auto rng = std::default_random_engine {};
+    std::shuffle(std::begin(triplets), std::end(triplets), rng);
 
 
     float step = 0.05f;
