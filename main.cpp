@@ -95,8 +95,8 @@ int main(int, char *[])
 
 
     float step = 0.05f;
-    size_t max_iter = 5;
-    float e = 0.1f;
+    size_t max_iter = 100;
+    float e = 0.01f;
 
     for(size_t p = 0; p<5; p++)
     {
@@ -107,11 +107,11 @@ int main(int, char *[])
         dataset data = cross_validation(triplets, p);
         // shuffle data
         auto rng = std::default_random_engine {};
-        std::shuffle(std::begin(data.triplets_train), std::end(data.triplets_train), rng);
         std::shuffle(std::begin(data.triplets_test), std::end(data.triplets_test), rng);
         // train
         while( true )
         {
+            std::shuffle(std::begin(data.triplets_train), std::end(data.triplets_train), rng);
             float cost = 0;
             for(size_t i = 0; i< data.triplets_train.size()/batch_size; i++){
                 // create sparce matrix
