@@ -7,9 +7,10 @@
 #include <algorithm>
 #include <random>
 #include "afPropogation.h"
+#include <fstream>
 
 using namespace std;
-typedef Eigen::Triplet<uint8_t> T;
+typedef Eigen::Triplet<int16_t> T;
 
 struct edge
 {
@@ -44,74 +45,39 @@ std::vector<edge> read_data(std::string filename ){
     }
 }
 
-struct dataset{
-    std::vector<edge> edges_train;
-    std::vector<edge> edges_test;
-};
-
-dataset cross_validation(const std::vector<edge>& edges, size_t part)
-{
-    assert(part<5);
-    auto first_test = edges.cbegin() + size_t((double(part)/5) * edges.size());
-    auto last_test = edges.cbegin() + size_t(((double(part + 1)/5) * edges.size()));
-    std::vector<edge> test(first_test, last_test);
-
-    auto first_train1 = edges.cbegin();
-    auto last_train1 = edges.cbegin() + size_t((double(part)/5) * edges.size());
-    std::vector<edge> train(first_test, last_test);
-
-    auto first_train2 = edges.cbegin() + size_t((double(part + 1)/5) * edges.size());
-    auto last_train2 = edges.cbegin() + edges.size();
-
-    train.insert(
-          train.end(),
-          std::make_move_iterator(first_train2),
-          std::make_move_iterator(last_train2)
-        );
-
-    return {train, test};
-
-}
-
 
 int main(int, char *[])
 {
-    const size_t nodes_count = 196591;
-    const size_t batch_size = 10000;
-    std::string filename = "/home/skutukov/work/AffinitiPropagation/Gowalla_edges.txt";
+//    const size_t nodes_count = 196591;
+    const size_t nodes_count = 14;
+//    std::string filename = "/home/skutukov/work/AffinitiPropagation/Gowalla_edges.txt";
+    std::string filename = "/home/skutukov/work/AffinitiPropagation/test.txt";
     std::vector<edge> edges = read_data(filename);
 
-    auto rng = std::default_random_engine {};
-    std::shuffle(std::begin(edges), std::end(edges), rng);
+    size_t max_iter = 10;
 
 
-    size_t max_iter = 500;
-
-    for(size_t p = 0; p<5; p++)
-    {
-
-        AfPropogation AF;
-        dataset data = cross_validation(edges, p);
-        // shuffle data
-        auto rng = std::default_random_engine {};
-        std::shuffle(std::begin(data.edges_train), std::end(data.edges_train), rng);
-        std::shuffle(std::begin(data.edges_test), std::end(data.edges_test), rng);
-        // train
-
-        SpMatU spMat(nodes_count, nodes_count) ;
-        std::vector<T> vec;
-        for(size_t j = 0; j < data.edges_train.size(); j++){
-            edge a = data.edges_train[j];
-            vec.push_back(T(a.beg, a.end, 1));
-        }
-        spMat.setFromTriplets(vec.begin(), vec.end());
-        spMat.makeCompressed();
-
-        auto C = AF.run(spMat, max_iter);
-
-        std::cout<< C << std::endl;
-
+    AfPropogation AF;
+    // shuffle data
+    SpMatU spMat(nodes_count, nodes_count) ;
+    std::vector<T> vec;
+    for(size_t j = 0; j < edges.size(); j++){
+        edge a = edges[j];
+        vec.push_back(T(a.beg, a.end, 1));
+        vec.push_back(T(a.end, a.beg, 1));
     }
+
+    spMat.setFromTriplets(vec.begin(), vec.end());
+    spMat.makeCompressed();
+
+    auto C = AF.run(spMat, max_iter);
+
+    ofstream log;
+    std::cout<< C << std::endl;
+    log.open ("log.txt");
+    log << C;
+    log.close();
+
 }
 
 
