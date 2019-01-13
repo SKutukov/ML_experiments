@@ -21,21 +21,23 @@ VectorS AfPropogation::run(const SpMatU& S, size_t max_iteration)
 VectorS AfPropogation::argMax(const SpMatL &C)
 {
     std::cout<< C << std::endl;
-    VectorS maxIndexs(C.cols(),1);
-    SpMatL::Index tempIndex;
-    std::cout<<"argmax" << std::endl;
-    for(long i=0; i<C.cols(); ++i){
-        long maxIndex = 0;
-        long maxValue = C.coeff(0, i);
-        for(long j=1; j<C.rows(); ++j){
-            if(maxValue < C.coeff(j, i)){
-                maxValue = C.coeff(j, i);
-                maxIndex = j;
-            }
+    VectorS maxIndexs = VectorS::Zero(C.cols());
+    VectorL maxValues(C.cols());
+
+    for (int k=0; k<C.outerSize(); ++k){
+      for (SpMatL::InnerIterator it(C,k); it; ++it)
+      {
+          long value = it.value();
+          long row = it.row();   // row index
+          long col = it.col();   // col index (here it is equal to k)
+
+          if(maxValues(col) < value){
+            maxValues(col) = value;
+            maxIndexs(col) = static_cast<size_t>(row);
         }
-        maxIndexs.coeffRef(i) = static_cast<size_t>(maxIndex);
+      }
     }
-//    std::cout<< maxIndex << std::endl;
+
     return  maxIndexs;
 }
 
