@@ -38,10 +38,10 @@ void AfPropogation::update_A(double lambda, graph& graph){
             sum += std::max<double>(0., edges[j]->r);
         }
 
-        double self_responsibility = edges.back()->r;
+        double self_r = edges.back()->r;
 
         for (size_t j = 0; j < edges.size() - 1; ++j){
-            double new_value = self_responsibility + sum - std::max<double>(0., edges[j]->r);
+            double new_value = self_r + sum - std::max<double>(0., edges[j]->r);
             edges[j]->a = edges[j]->a * lambda + new_value * (1. - lambda);
         }
 

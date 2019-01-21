@@ -1,8 +1,9 @@
 #ifndef AFPROPOGATION_H
 #define AFPROPOGATION_H
 
-#include <Eigen/Sparse>
 #include <memory>
+#include <vector>
+
 struct edge
 {
     size_t beg;

@@ -1,6 +1,5 @@
 #include <iostream>
 #include <vector>
-#include <Eigen/Sparse>
 #include <iostream>
 #include <fstream>
 #include <string>
@@ -8,9 +7,9 @@
 #include <random>
 #include "afPropogation.h"
 #include <fstream>
+#include <sstream>
 
 using namespace std;
-typedef Eigen::Triplet<double> T;
 
 std::vector<edge> read_data(std::string filename, graph& graph_in, graph& graph_out){
     std::vector<edge> edges;
