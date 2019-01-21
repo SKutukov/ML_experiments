@@ -10,15 +10,9 @@
 #include <fstream>
 
 using namespace std;
-typedef Eigen::Triplet<int16_t> T;
+typedef Eigen::Triplet<double> T;
 
-struct edge
-{
-    size_t beg;
-    size_t end;
-};
-
-std::vector<edge> read_data(std::string filename ){
+std::vector<edge> read_data(std::string filename, graph& graph_in, graph& graph_out){
     std::vector<edge> edges;
     ifstream file(filename);
 
@@ -33,12 +27,22 @@ std::vector<edge> read_data(std::string filename ){
         size_t beg;
         size_t end;
         iss >> beg >> end;
-        edges.push_back({beg, end});
+        std::shared_ptr<edge> sp_e = std::make_shared<edge>(edge(beg, end, 1., 0, 0.));
+        graph_in.lists[beg].push_back(sp_e);
+        graph_out.lists[end].push_back(sp_e);
         k++;
 
       }
 
       file.close();
+
+      // init diag edges
+      for (size_t i=0; i < graph_in.lists.size(); ++i) {
+          std::shared_ptr<edge> sp_e = std::make_shared<edge>(edge(i, i, -1., 0, 0.));
+          graph_in.lists[i].push_back(sp_e);
+          graph_out.lists[i].push_back(sp_e);
+      }
+
       std::cout<<k<<std::endl;
       std::cout<< "Stop reading ... \n";
       return edges;
@@ -48,36 +52,27 @@ std::vector<edge> read_data(std::string filename ){
 
 int main(int, char *[])
 {
-//    const size_t nodes_count = 196591;
-    const size_t nodes_count = 14;
-//    std::string filename = "/home/skutukov/work/AffinitiPropagation/Gowalla_edges.txt";
-    std::string filename = "/home/skutukov/work/AffinitiPropagation/test.txt";
-    std::vector<edge> edges = read_data(filename);
+//    const size_t nodes_count = 10;
+//    std::string filename = "/home/skutukov/work/AffinitiPropagation/test.txt";
 
-    size_t max_iter = 10;
+    const size_t nodes_count = 196591;
+    std::string filename = "/home/skutukov/work/AffinitiPropagation/loc-gowalla_edges.txt";
 
+    graph graph_in(nodes_count), graph_out(nodes_count);
+    std::vector<edge> edges = read_data(filename, graph_in, graph_out);
+    size_t max_iter = 20;
 
     AfPropogation AF;
-    // shuffle data
-    SpMatU spMat(nodes_count, nodes_count) ;
-    std::vector<T> vec;
-    for(size_t j = 0; j < edges.size(); j++){
-        edge a = edges[j];
-        vec.push_back(T(a.beg, a.end, 1));
-        vec.push_back(T(a.end, a.beg, 1));
-    }
-
-    spMat.setFromTriplets(vec.begin(), vec.end());
-    spMat.makeCompressed();
-
-    auto C = AF.run(spMat, max_iter);
+    auto C = AF.run(max_iter, graph_in, graph_out);
 
     ofstream log;
-    std::cout<< C << std::endl;
-    log.open ("log.txt");
-    log << C;
+    log.open ("res.txt");
+    size_t i = 0;
+    for(auto c: C){
+        log<< i << "\t" << c << std::endl;
+    }
+    log<< std::endl;
     log.close();
-
 }
 
 

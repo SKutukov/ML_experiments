@@ -2,20 +2,35 @@
 #define AFPROPOGATION_H
 
 #include <Eigen/Sparse>
-using SpMatU = Eigen::SparseMatrix<int16_t>;
-using SpMatL = Eigen::SparseMatrix<long>;
-using VectorL = Eigen::Matrix<long, -1, 1>;
-using VectorS = Eigen::Matrix<size_t, -1, 1>;
+#include <memory>
+struct edge
+{
+    size_t beg;
+    size_t end;
+    double s, a, r;
+    edge( size_t beg, size_t end, double s, double a, double r):
+    beg(beg),end(end),s(s),a(a),r(r)
+    {}
+};
+
+struct graph
+{
+    std::vector<std::vector<std::shared_ptr<edge>>> lists;
+    graph(size_t nodes_count){
+        //init list with empty
+        lists.resize(nodes_count);
+        lists.assign(nodes_count, std::vector<std::shared_ptr<edge>>());
+    }
+};
+
 class AfPropogation
 {
 private:
-    SpMatL R;
-    SpMatL A;
-    VectorS argMax(const SpMatL& C);
-    void update_R(const SpMatU& S);
-    void update_A(const SpMatU& S);
+    void update_R(double lambda, graph& graph_out);
+    void update_A(double lambda, graph& graph_in);
+    std::vector<size_t> argmax(const graph& graph_out);
 public:
-    VectorS run(const SpMatU& S, size_t max_iteration);
+    std::vector<size_t> run(size_t max_iteration, graph& graph_in, graph& graph_out);
 };
 
 #endif

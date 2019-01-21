@@ -1,111 +1,87 @@
 #include "afPropogation.h"
 #include <iostream>
+#include <fstream>
+#include <chrono>
+#include <set>
 
+void AfPropogation::update_R(double lambda, graph& graph){
+    for (size_t i = 0; i < graph.lists.size(); ++i) {
+        auto& edges = graph.lists[i];
 
-VectorS AfPropogation::run(const SpMatU& S, size_t max_iteration)
-{
-    std::cout<< S << std::endl;
-    R = SpMatL(S.rows(), S.cols());
-    A = SpMatL(S.rows(), S.cols());
-    for (size_t i = 0; i < max_iteration; i++) {
-        update_R(S);
-        update_A(S);
-        std::cout<<R<<std::endl;
-        std::cout<<A<<std::endl;
-    }
+        for (size_t j = 0; j < edges.size(); ++j) {
+            auto& edge = edges[j];
 
-    //get maximum in each column
-    return argMax(A + R);
-}
-
-VectorS AfPropogation::argMax(const SpMatL &C)
-{
-    std::cout<< C << std::endl;
-    VectorS maxIndexs = VectorS::Zero(C.cols());
-    VectorL maxValues(C.cols());
-
-    for (int k=0; k<C.outerSize(); ++k){
-      for (SpMatL::InnerIterator it(C,k); it; ++it)
-      {
-          long value = it.value();
-          long row = it.row();   // row index
-          long col = it.col();   // col index (here it is equal to k)
-
-          if(maxValues(col) < value){
-            maxValues(col) = value;
-            maxIndexs(col) = static_cast<size_t>(row);
-        }
-      }
-    }
-
-    return  maxIndexs;
-}
-
-void AfPropogation::update_R(const SpMatU &S)
-{
-    for (int row = 0; row < S.outerSize(); ++row){
-      for (int col = 0; col < S.outerSize(); ++col)
-      {
-        // get row
-        auto S_column = S.row(row);
-        auto A_column = A.row(row);
-        auto dense_column = (A_column + S_column.cast<long>() );
-        long max1 = std::numeric_limits<long>::min();
-        if ( row != 0 )
-        {
-            // get maximum of first row elem
-            max1 = dense_column.head( row ).toDense().maxCoeff();
-        }
-        long max2 = std::numeric_limits<long>::min();
-        if ( row !=  (S.outerSize() - 1))
-        {
-            // get maximum of last S.outerSize() - row - 1  elem
-            max2 = dense_column.tail( S.outerSize() - row - 1 ).toDense().maxCoeff();
-        }
-        R.coeffRef(row, col) = S.coeff(row, col) - std::max(max1, max2);
-
-      }
-    }
-}
-
-void AfPropogation::update_A(const SpMatU &S)
-{
-    for (int row = 0; row < S.outerSize(); ++row){
-          for (int col = 0; col < S.outerSize(); ++col)
-          {
-              auto min = std::min(row , col);
-              auto max = std::max(row , col);
-              auto R_column = R.col(col).toDense().cwiseMax(0);
-              // get maximum of first min - 1 elem
-//              std::cout<< row << ' '<< col << std::endl;
-              // get maximum of last S.outerSize() - max - 1  elem
-              long sum2 = 0;
-              if(max != (S.outerSize() - 1)){
-                  // todo
-                  // undestand whats wrong happend on release if next two rows are missing
-                  std::stringstream ss;
-                  ss << R_column.block(row, 0, S.outerSize() - max - 1, 1);
-
-                  sum2 = R_column.block(row, 0, S.outerSize() - max - 1, 1).eval().sum();
-              }
-
-              long sum1 = 0;
-              if(min != 0) {
-                  sum1 = R_column.head( min ).eval().sum();
-              }
-
-//              std::cout<< row << ' '<< col << std::endl;
-              auto positive_sum =  sum1 + sum2;
-              if(row != col){
-                long sum3 = 0;
-                if(max - min - 1 > 0) {
-                    sum3 = R_column.block(min + 1, 0, max - min - 1, 1).sum();
+            double max_value = -std::numeric_limits<double>::infinity();
+            int max_index = -1;
+            for (size_t k = 0; k < edges.size(); ++k) {
+                auto& temp_edge = edges[k];
+                if(max_value< (temp_edge->a + temp_edge->s) && j != k){
+                    max_value = temp_edge->a + temp_edge->s;
+                    max_index = k;
                 }
-                A.coeffRef(row, col) = std::min(long(0),  R.coeff(col, col) + positive_sum + sum3);
-              } else {
-                A.coeffRef(row, col) = std::min(long(0),  positive_sum);
-              }
-
-          }
+            }
+            // set max value as 0 if row have only one elem
+            if( max_index == -1){
+                max_value = 0;
+            }
+            double new_value = new_value = edge->s - max_value;
+            edge->r =  edge->r * lambda - new_value* (1. - lambda);
+        }
     }
+}
+void AfPropogation::update_A(double lambda, graph& graph){
+    for (size_t i = 0; i < graph.lists.size(); ++i) {
+        auto& edges = graph.lists[i];
+        double sum = 0;
+
+        for (size_t j = 0; j < edges.size(); ++j){
+            sum += std::max<double>(0., edges[j]->r);
+        }
+
+        double self_responsibility = edges.back()->r;
+
+        for (size_t j = 0; j < edges.size() - 1; ++j){
+            double new_value = self_responsibility + sum - std::max<double>(0., edges[j]->r);
+            edges[j]->a = edges[j]->a * lambda + new_value * (1. - lambda);
+        }
+
+        double new_value = sum;
+        edges.back()->a= edges.back()->a * lambda + new_value * (1. - lambda);
+    }
+}
+
+std::vector<size_t> AfPropogation::argmax(const graph& graph)
+{
+    std::vector<size_t> C(graph.lists.size());
+    for(size_t i = 0; i< graph.lists.size(); ++i){
+        auto& p_edgesRow = graph.lists[i];
+        double max = -std::numeric_limits<double>::infinity();
+        size_t max_index = -1;
+        double temp_value;
+
+        for (size_t j = 0; j < p_edgesRow.size(); ++j) {
+            auto& edge = p_edgesRow[j];
+            temp_value = edge->s + edge->a;
+
+            if (temp_value > max) {
+                max = temp_value;
+                max_index = edge->end;
+            }
+        }
+        C[i] = max_index;
+    }
+    return C;
+}
+std::vector<size_t> AfPropogation::run(size_t max_iteration, graph& graph_in, graph& graph_out){
+        double lambda = 0.7;
+        for (size_t i = 0; i < max_iteration; i++) {
+            std::cout<< i << "\n";
+            update_R(lambda, graph_in);
+            update_A(lambda, graph_out);
+            auto temp = argmax(graph_in);
+            std::cout << "Number of unique elements is "
+                          << std::set<size_t>( temp.begin(), temp.end() ).size()
+                          << "\r";
+        }
+        return argmax(graph_in);
 }
