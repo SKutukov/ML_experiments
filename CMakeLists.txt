@@ -9,7 +9,10 @@ include_directories(include)
 add_executable(${PROJECT_NAME}
     "main.cpp"
     "src/factormachine.cpp"
-    "include/factormachine.h")
+    "include/factormachine.h"
+    "boost_serialization_eigen.h")
 find_package (Eigen3 3.3 REQUIRED NO_MODULE)
+FIND_PACKAGE( Boost 1.40 COMPONENTS program_options regex serialization REQUIRED )
+INCLUDE_DIRECTORIES( ${Boost_INCLUDE_DIR} )
 
-target_link_libraries(${PROJECT_NAME} Eigen3::Eigen)
+target_link_libraries(${PROJECT_NAME} Eigen3::Eigen ${Boost_LIBRARIES})
