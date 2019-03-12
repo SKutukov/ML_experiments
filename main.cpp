@@ -50,7 +50,7 @@ std::vector<int> parse_onehot(std::string str){
         if (value){
             themes.push_back(count);
         }
-        count ++;
+        count++;
     }
     value = std::stof(s);
     if (value == 1.){
@@ -106,8 +106,10 @@ std::vector<triplet> read_data(std::string filename, bool isTrain=true){
             tr.user_id = std::stoi(row[1]); 
             tr.object_id = std::stoi(row[2]);
             tr.metadata_ownerId = std::stoi(row[3]);
+            
             tr.themes = parse_onehot(row[4]);
             if(isTrain){
+            //    std::cout<< row[5] << std::endl;
                 tr.r = std::stof(row[5]);
             }
             triplets.push_back(tr);
@@ -152,18 +154,18 @@ dataset cross_validation(const std::vector<triplet>& triplets, size_t part)
 
 int main(int, char *[])
 {
-    const size_t user_count = 1269037;
+    const size_t user_count = 15710942;
     const size_t autor_count = 85735;
     const size_t themes_count = 19;
     const size_t sum_count = user_count + autor_count + themes_count;
 
 
-    const uint8_t k = 2;
-    const size_t batch_size = 200;
+    const uint8_t k = 5;
+    const size_t batch_size = 10000;
     dataset data;
-    std::string filename = "/home/skutukov/Documents/FactorMachine/maped_data.csv";
+    std::string filename = "/home/skutukov/Documents/SNA/data/train_data.csv";
     data.triplets_train = read_data(filename);
-    filename = "/home/skutukov/Documents/SNA/data/maped_data.csv";
+    filename = "/home/skutukov/Documents/SNA/data/test_onehots.csv";
     data.triplets_test = read_data(filename, false);
     auto rng = std::default_random_engine {};
     std::shuffle(std::begin(data.triplets_train), std::end(data.triplets_train), rng);
