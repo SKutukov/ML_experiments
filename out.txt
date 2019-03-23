@@ -1,0 +1,12 @@
+Index(['instanceId_userId', 'instanceId_objectType', 'instanceId_objectId',
+       'audit_pos', 'audit_clientType', 'audit_timestamp', 'audit_timePassed',
+       'audit_experiment', 'audit_resourceType', 'metadata_ownerId',
+       ...
+       'auditweights_userOwner_USER_PRESENT_SEND',
+       'auditweights_userOwner_USER_PROFILE_VIEW',
+       'auditweights_userOwner_USER_SEND_MESSAGE',
+       'auditweights_userOwner_USER_STATUS_COMMENT_CREATE',
+       'auditweights_userOwner_VIDEO', 'auditweights_userOwner_VOTE_POLL',
+       'auditweights_x_ActorsRelations', 'auditweights_likersSvd_spark_hyper',
+       'auditweights_source_PROMO', 'liked'],
+      dtype='object', length=169)
