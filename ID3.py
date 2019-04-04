@@ -1,187 +1,59 @@
-import re
+import numpy as np
 import math
-from collections import deque
 
-# x is examples in training set
-# y is set of attributes
-# label is target attributes
-# Node is a class which has properties values, childs, and next
-# root is top node in the decision tree
+class ID3:
+	def __init__(self, X, y, label = -1):
+		self.label = label
+		y_pos_count = y[y == 1].shape[0]
+		y_neg_count = y[y == 0].shape[0]
 
-class Node(object):
-	def __init__(self):
-		self.value = None
-		self.next = None
-		self.childs = None
+		if y_pos_count == 0:
+			self.label = 1
 
-# Simple class of Decision Tree
-# Aimed for who want to learn Decision Tree, so it is not optimized
-class DecisionTree(object):
-	def __init__(self, sample, attributes, labels):
-		self.sample = sample
-		self.attributes = attributes
-		self.labels = labels
-		self.labelCodes = None
-		self.labelCodesCount = None
-		self.initLabelCodes()
-		# print(self.labelCodes)
-		self.root = None
-		self.entropy = self.getEntropy([x for x in range(len(self.labels))])
+		elif y_neg_count == 0:
+			self.label = 0
 
-	def initLabelCodes(self):
-		self.labelCodes = []
-		self.labelCodesCount = []
-		for l in self.labels:
-			if l not in self.labelCodes:
-				self.labelCodes.append(l)
-				self.labelCodesCount.append(0)
-			self.labelCodesCount[self.labelCodes.index(l)] += 1
+		elif len(X.columns) == 0:
+			self.label = 1 if y_pos_count >= y_neg_count else 0
 
-	def getLabelCodeId(self, sampleId):
-		return self.labelCodes.index(self.labels[sampleId])
+		self.feature = self.maxIG(X, y)
 
-	def getAttributeValues(self, sampleIds, attributeId):
-		vals = []
-		for sid in sampleIds:
-			val = self.sample[sid][attributeId]
-			if val not in vals:
-				vals.append(val)
-		# print(vals)
-		return vals
+		X_0 = X[ X[self.feature] == 0]
+		X_0.drop(self.feature, 1, inplace=True)
+		y_0 = y[ X[self.feature] == 0]
+		if X_0.shape[0] == 0:
+			self.left_ID3 = ID3(X_0, y_0, 1 if y_pos_count >= y_neg_count else 0)
+		else:
+			self.left_ID3 = ID3(X_0, y_0)
 
-	def getEntropy(self, sampleIds):
-		entropy = 0
-		labelCount = [0] * len(self.labelCodes)
-		for sid in sampleIds:
-			labelCount[self.getLabelCodeId(sid)] += 1
-		# print("-ge", labelCount)
-		for lv in labelCount:
-			# print(lv)
-			if lv != 0:
-				entropy += -lv/len(sampleIds) * math.log(lv/len(sampleIds), 2)
-			else:
-				entropy += 0
-		return entropy
+		X_1 = X[X[self.feature] == 1]
+		X_1.drop(self.feature, 1, inplace=True)
+		y_1 = y[X[self.feature] == 1]
+		if X_1.shape[0] == 0:
+			self.right_ID3 = ID3(X_1, y_1, 1 if y_pos_count >= y_neg_count else 0)
+		else:
+			self.left_ID3 = ID3(X_1, y_1)
 
-	def getDominantLabel(self, sampleIds):
-		labelCodesCount = [0] * len(self.labelCodes)
-		for sid in sampleIds:
-			labelCodesCount[self.labelCodes.index(self.labels[sid])] += 1
-		return self.labelCodes[labelCodesCount.index(max(labelCodesCount))]
+	def calcEntropy(self, X, y):
+		p_0 = sum(y == 0).shape[0] / X.shape[0]
+		p_1 = sum(y == 1) / X.shape[0]
+		entropy_0 = p_0 * math.log(p_0)
+		entropy_1 = p_1 * math.log(p_1)
 
-	def getInformationGain(self, sampleIds, attributeId):
-		gain = self.getEntropy(sampleIds)
-		attributeVals = []
-		attributeValsCount = []
-		attributeValsIds = []
-		for sid in sampleIds:
-			val = self.sample[sid][attributeId]
-			if val not in attributeVals:
-				attributeVals.append(val)
-				attributeValsCount.append(0)
-				attributeValsIds.append([])
-			vid = attributeVals.index(val)
-			attributeValsCount[vid] += 1
-			attributeValsIds[vid].append(sid)
-		# print("-gig", self.attributes[attributeId])
-		for vc, vids in zip(attributeValsCount, attributeValsIds):
-			# print("-gig", vids)
-			gain -= vc/len(sampleIds) * self.getEntropy(vids)
-		return gain
-
-	def getAttributeMaxInformationGain(self, sampleIds, attributeIds):
-		attributesEntropy = [0] * len(attributeIds)
-		for i, attId in zip(range(len(attributeIds)), attributeIds):
-			attributesEntropy[i] = self.getInformationGain(sampleIds, attId)
-		maxId = attributeIds[attributesEntropy.index(max(attributesEntropy))]
-		return self.attributes[maxId], maxId
-
-	def isSingleLabeled(self, sampleIds):
-		label = self.labels[sampleIds[0]]
-		for sid in sampleIds:
-			if self.labels[sid] != label:
-				return False
-		return True
-
-	def getLabel(self, sampleId):
-		return self.labels[sampleId]
-
-	def id3(self):
-		sampleIds = [x for x in range(len(self.sample))]
-		attributeIds = [x for x in range(len(self.attributes))]
-		self.root = self.id3Recv(sampleIds, attributeIds, self.root)
-
-	def id3Recv(self, sampleIds, attributeIds, root):
-		root = Node() # Initialize current root
-		if self.isSingleLabeled(sampleIds):
-			root.value = self.labels[sampleIds[0]]
-			return root
-		# print(attributeIds)
-		if len(attributeIds) == 0:
-			root.value = self.getDominantLabel(sampleIds)
-			return root
-		bestAttrName, bestAttrId = self.getAttributeMaxInformationGain(
-			sampleIds, attributeIds)
-		# print(bestAttrName)
-		root.value = bestAttrName
-		root.childs = []  # Create list of children
-		for value in self.getAttributeValues(sampleIds, bestAttrId):
-			# print(value)
-			child = Node()
-			child.value = value
-			root.childs.append(child)  # Append new child node to current
-									   # root
-			childSampleIds = []
-			for sid in sampleIds:
-				if self.sample[sid][bestAttrId] == value:
-					childSampleIds.append(sid)
-			if len(childSampleIds) == 0:
-				child.next = self.getDominantLabel(sampleIds)
-			else:
-				# print(bestAttrName, bestAttrId)
-				# print(attributeIds)
-				if len(attributeIds) > 0 and bestAttrId in attributeIds:
-					toRemove = attributeIds.index(bestAttrId)
-					attributeIds.pop(toRemove)
-				child.next = self.id3Recv(
-					childSampleIds, attributeIds, child.next)
-		return root
-
-	def printTree(self):
-		if self.root:
-			roots = deque()
-			roots.append(self.root)
-			while len(roots) > 0:
-				root = roots.popleft()
-				print(root.value)
-				if root.childs:
-					for child in root.childs:
-						print('({})'.format(child.value))
-						roots.append(child.next)
-				elif root.next:
-					print(root.next)
+		return -(entropy_0 + entropy_1)
 
 
-def test():
-	f = open('playtennis.csv')
-	attributes = f.readline().split(',')
-	attributes = attributes[1:len(attributes)-1]
-	print(attributes)
-	sample = f.readlines()
-	f.close()
-	for i in range(len(sample)):
-		sample[i] = re.sub('\d+,', '', sample[i])
-		sample[i] = sample[i].strip().split(',')
-	labels = []
-	for s in sample:
-		labels.append(s.pop())
-	# print(sample)
-	# print(labels)
-	decisionTree = DecisionTree(sample, attributes, labels)
-	print("System entropy {}".format(decisionTree.entropy))
-	decisionTree.id3()
-	decisionTree.printTree()
+	def calcIG(self, X, y, feature):
 
+		return self.calcEntropy(X, y) - self.calcEntropy(X[X[feature] == 0], y[X[feature] == 0]) \
+									- self.calcEntropy(X[X[feature] == 1], y[X[feature] == 1])
 
-if __name__ == '__main__':
-	test()
+	def maxIG(self, X, y):
+		IGs = []
+
+		for feature in X.columns:
+			IGs.append(self.calcIG(X, y, feature))
+		IGs = np.array(IGs)
+
+		return X.columns[np.argmax(IGs)]
+

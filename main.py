@@ -53,8 +53,7 @@ def transform_data(data):
     user_data_disliked = user_data[user_data['liked'] == 0]
     user_data_liked = shuffle(user_data_liked)
     user_data_disliked = shuffle(user_data_disliked)
-    if user_data_liked.shape[0] == 0 or user_data_disliked.shape[0] == 0:
-        continue
+
     liked_mask  = np.random.randint(2, size=user_data_liked.shape[0]).astype(bool)
     disliked_mask = np.random.randint(2, size=user_data_disliked.shape[0]).astype(bool)
     liked_mask[0] = True
