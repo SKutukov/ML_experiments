@@ -10,10 +10,10 @@ class ID3:
 		y_neg_count = (y == 0).sum()
 
 		if y_pos_count == 0:
-			self.label = 1
+			self.label = 0
 
 		elif y_neg_count == 0:
-			self.label = 0
+			self.label = 1
 
 		elif len(X.columns) == 0:
 			self.label = 1 if y_pos_count >= y_neg_count else 0
