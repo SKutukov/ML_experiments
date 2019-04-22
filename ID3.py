@@ -65,19 +65,18 @@ class ID3:
 		return X.columns[np.argmax(IGs)]
 
 
-	def predit(self, x):
+	def predict(self, x):
 
 		if self.label != -1:
 			return self.label
 		else:
-			return self.right_ID3.predit(x) if x[self.feature] else self.left_ID3.predit(x)
+			return self.right_ID3.predict(x) if x[self.feature] else self.left_ID3.predict(x)
 
 	def predict_mul(self, X):
 
 		y = []
-
 		for index, row in X.iterrows():
-			y.append(self.predit(row))
+			y.append(self.predict(row))
 
 		return np.array(y)
 
