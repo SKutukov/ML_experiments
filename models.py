@@ -1,7 +1,3 @@
-import keras
-from keras.models import Sequential
-from keras.layers import Dense
-from keras.activations import softmax
 import numpy as np
 
 class Network:

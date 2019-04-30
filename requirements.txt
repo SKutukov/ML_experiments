@@ -1,3 +1,6 @@
 gym
 numpy
 box2d-py
+tensorflow
+matplotlib
+pillow
