@@ -5,4 +5,5 @@
 venv/*
 env/*
 gym-results
-*.gif
+logs/*
+.ipynb_checkpoints/*
