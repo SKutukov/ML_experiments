@@ -12,6 +12,7 @@ class Network:
         self.saver = tf.train.Saver()
         if restore_path is not None:
             self.saver.restore(self.sess, restore_path)
+            print("Restore model from {}").format(restore_path)
 
 
     def predict(self, observation):
@@ -31,14 +32,15 @@ class Network:
 
     def save_model(self, save_path):
         self.saver.save(self.sess, save_path)
+        print("Save model to {}").format(save_path)
 
     def calc_reward(self, episode_rewards):
-        discounted_r = np.zeros_like(episode_rewards)
+        discounted_reward = np.zeros_like(episode_rewards)
         running_add = 0
         for t in reversed(range(len(episode_rewards))):
             running_add = running_add * self.gamma + episode_rewards[t]
-            discounted_r[t] = running_add
-        return discounted_r
+            discounted_reward[t] = running_add
+        return discounted_reward
 
 
     def build_network(self, x_shape, y_shape, learning_rate=0.01):
