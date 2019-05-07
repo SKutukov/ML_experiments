@@ -46,8 +46,8 @@ if __name__ == "__main__":
             if is_render:
                 env.render()
 
-            #action =  heuristic(env, state)
-            action =  model.predict(state)
+            action =  heuristic(env, state)
+            #action =  model.predict(state)
             state_, reward, done, info = env.step(action)
 
             epoche_observations.append(state)

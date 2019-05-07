@@ -12,17 +12,17 @@ if __name__ == "__main__":
 
     load_version = 0
     training_version = 1
-    restore_path = "res/weights/{}/LunarLander-v2.ckpt".format(training_version)
-    save_path = "res/weights/{}/LunarLander-v2.ckpt".format(training_version)
+    restore_path = "res/weights_lr/{}/LunarLander-v2.ckpt".format(training_version)
+    save_path = "res/weights_lr/{}/LunarLander-v2.ckpt".format(training_version)
 
     min_reward = -500
     time_limit = 60
 
     model = Network(x_shape=env.observation_space.shape[0],
                     y_shape=env.action_space.n,
-                    learning_rate=0.02,
+                    learning_rate=0.05,
                     gamma=0.99,
-                    restore_path=restore_path)
+                    restore_path=None)
 
 
     for epoch in range(current_epoch, epochs_count):

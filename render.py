@@ -5,15 +5,14 @@ from models import Network
 import gym
 
 from PIL import Image
-from IPython.display import HTML
 import argparse
 from heuristic import heuristic
 
 def parse_args():
     """Parse input arguments."""
     parser = argparse.ArgumentParser(description=' ')
-    parser.add_argument('--heuristic', dest=' ', action='store_true')
-    parser.add_argument('--no-heuristic', dest=' ', action='store_false')
+    parser.add_argument('--heuristic', dest='heuristic', action='store_true')
+    parser.add_argument('--no-heuristic', dest='heuristic', action='store_false')
     parser.set_defaults(heuristic=False)
 
     parser.add_argument('--weight', help='tensorflow weight', type=str)
@@ -29,7 +28,7 @@ if __name__ == "__main__":
     frames = []
 
     args = parse_args()
-
+    print(args)
     is_heuristic = args.heuristic
     weight_path = args.weight
     output_path = args.output
@@ -46,36 +45,19 @@ if __name__ == "__main__":
         steps = 0
         s = env.reset()
         while True:
+            env.render()
             frames.append(Image.fromarray(env.render(mode='rgb_array')))
-
+		
             if is_heuristic:
-                a = heuristic(env, s)
+                 a = heuristic(env, s)
             else:
                 a = model.predict(s)
 
-            a = np.argmax(a)
-            s1 = s.copy()
-            s, r, done, info = env.step(a)
-            # model.fit(s1, s, reward, a)
-            total_reward += r
-
-            # Fit the model
-            # model.fit(X, Y, epochs=1, batch_size=1)
-
-            if render:
-                still_open = env.render()
-                if still_open == False:
-                    break
-
-            # if steps % 20 == 0 or done:
-            #    print("observations:", " ".join(["{:+0.2f}".format(x) for x in s]))
-            #    print("step {} total_reward {:+0.2f}".format(steps, total_reward))
-            # steps += 1
+            state_, reward, done, info = env.step(a)
 
             if done:
                 break
-
-    #         print(total_reward)
+            s = state_
 
     env.close()
 
