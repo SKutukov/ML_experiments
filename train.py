@@ -6,23 +6,23 @@ if __name__ == "__main__":
 
     is_render = True
     current_epoch = 0
-    epochs_count = 5000
-    max_reward = -500
+    epochs_count = 15000
+    max_reward = -200
     env = LunarLander()
 
-    load_version = 0
-    training_version = 1
-    restore_path = "res/weights_lr/{}/LunarLander-v2.ckpt".format(training_version)
+    load_version = 5
+    training_version = 6
+    restore_path = "res/weights_lr/{}/LunarLander-v2.ckpt".format(load_version)
     save_path = "res/weights_lr/{}/LunarLander-v2.ckpt".format(training_version)
 
-    min_reward = -500
+    min_reward = -200
     time_limit = 60
 
     model = Network(x_shape=env.observation_space.shape[0],
                     y_shape=env.action_space.n,
-                    learning_rate=0.05,
+                    learning_rate=0.01,
                     gamma=0.99,
-                    restore_path=None)
+                    restore_path=restore_path)
 
 
     for epoch in range(current_epoch, epochs_count):

@@ -33,13 +33,15 @@ class Network:
     def save_model(self, save_path):
         self.saver.save(self.sess, save_path)
         print("Save model to {}".format(save_path))
-
+   
     def calc_reward(self, episode_rewards):
         discounted_reward = np.zeros_like(episode_rewards)
         running_add = 0
         for t in reversed(range(len(episode_rewards))):
             running_add = running_add * self.gamma + episode_rewards[t]
             discounted_reward[t] = running_add
+        discounted_reward -= np.mean(discounted_reward)
+        discounted_reward /= np.std(discounted_reward)	
         return discounted_reward
 
 

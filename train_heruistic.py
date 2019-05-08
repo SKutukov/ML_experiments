@@ -9,19 +9,19 @@ if __name__ == "__main__":
 
     is_render = True
     current_epoch = 0
-    epochs_count = 15000
+    epochs_count = 5000
     max_reward = -500
     env = LunarLander()
 
-    load_version = 3
-    training_version = "4"
+    load_version = 1
+    training_version = "2"
 
     path = "res/weights_heuristic/"
     if not os.path.isdir(path):
         os.mkdir(path)
 
-    restore_path = "res/weights_heuristic/{}/LunarLander-v2.ckpt".format(load_version)
-    save_path = "res/weights_heuristic/{}/LunarLander-v2.ckpt".format(training_version)
+    restore_path = "res/weights_heuristic_lr/{}/LunarLander-v2.ckpt".format(load_version)
+    save_path = "res/weights_heuristic_lr/{}/LunarLander-v2.ckpt".format(training_version)
     print(save_path)
     min_reward = -500
     time_limit = 60
@@ -46,8 +46,8 @@ if __name__ == "__main__":
             if is_render:
                 env.render()
 
-            action =  heuristic(env, state)
-            #action =  model.predict(state)
+            #action =  heuristic(env, state)
+            action =  model.predict(state)
             state_, reward, done, info = env.step(action)
 
             epoche_observations.append(state)
