@@ -8,6 +8,8 @@ from PIL import Image
 import argparse
 from heuristic import heuristic
 
+import time 
+
 def parse_args():
     """Parse input arguments."""
     parser = argparse.ArgumentParser(description=' ')
@@ -40,10 +42,13 @@ if __name__ == "__main__":
                         gamma=0.99,
                         restore_path=weight_path)
 
-    for i in range(1, 10):
+    for i in range(1, 5):
         total_reward = 0
         steps = 0
         s = env.reset()
+        epoche_rewards = []
+        start = time.clock()
+
         while True:
             env.render()
             frames.append(Image.fromarray(env.render(mode='rgb_array')))
@@ -54,6 +59,14 @@ if __name__ == "__main__":
                 a = model.predict(s)
 
             state_, reward, done, info = env.step(a)
+            epoche_rewards.append(reward)    
+           
+            episode_rewards_sum = sum(epoche_rewards)
+            if episode_rewards_sum < -200:
+                done = True
+
+            if time.clock() - start > 40:
+                break
 
             if done:
                 break
