@@ -10,8 +10,8 @@ if __name__ == "__main__":
     max_reward = -200
     env = LunarLander()
 
-    load_version = 5
-    training_version = 6
+    load_version = 3
+    training_version = 7
     restore_path = "res/weights_lr/{}/LunarLander-v2.ckpt".format(load_version)
     save_path = "res/weights_lr/{}/LunarLander-v2.ckpt".format(training_version)
 
@@ -20,8 +20,8 @@ if __name__ == "__main__":
 
     model = Network(x_shape=env.observation_space.shape[0],
                     y_shape=env.action_space.n,
-                    learning_rate=0.01,
-                    gamma=0.99,
+                    learning_rate=0.02,
+                    gamma=0.7,
                     restore_path=restore_path)
 
 
@@ -40,6 +40,13 @@ if __name__ == "__main__":
 
             action = model.predict(state)
 
+            episode_rewards_sum = sum(epoche_rewards)
+            if episode_rewards_sum < min_reward:
+                action = 0
+
+            if time.clock() - time_begin > time_limit:
+                action = 0
+
             state_, reward, done, info = env.step(action)
 
             epoche_observations.append(state)
@@ -50,12 +57,8 @@ if __name__ == "__main__":
 
             epoche_actions.append(action_onehot)
 
-            episode_rewards_sum = sum(epoche_rewards)
-            if episode_rewards_sum < min_reward:
-                done = True
 
-            if time.clock() - time_begin > time_limit:
-                done = True
+            
 
             if done:
                 episode_rewards_sum = sum(epoche_rewards)
