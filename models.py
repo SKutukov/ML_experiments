@@ -21,13 +21,14 @@ class Network:
         action = np.random.choice(range(len(prob_weights.ravel())), p=prob_weights.ravel())
         return action
 
-    def fit(self, episode_observations, episode_actions, episode_rewards):
+    def fit(self, dataset):
+        for episode_observations, episode_actions, episode_rewards in dataset.data[-1:-10]:
 
-        self.sess.run(self.train_op, feed_dict={
-             self.X: np.vstack(episode_observations).T,
-             self.Y: np.vstack(np.array(episode_actions)).T,
-             self.epoch_rewards: self.calc_reward(episode_rewards),
-        })
+            self.sess.run(self.train_op, feed_dict={
+                self.X: np.vstack(episode_observations).T,
+                self.Y: np.vstack(np.array(episode_actions)).T,
+                self.epoch_rewards: self.calc_reward(episode_rewards),
+            })
 
 
     def save_model(self, save_path):

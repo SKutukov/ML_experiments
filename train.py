@@ -2,6 +2,7 @@ from gym.envs.box2d.lunar_lander import LunarLander
 import numpy as np
 from models import Network
 import time
+from dataset import Dataset
 if __name__ == "__main__":
 
     is_render = True
@@ -10,10 +11,14 @@ if __name__ == "__main__":
     max_reward = -200
     env = LunarLander()
 
-    load_version = 3
-    training_version = 7
-    restore_path = "res/weights_lr/{}/LunarLander-v2.ckpt".format(load_version)
-    save_path = "res/weights_lr/{}/LunarLander-v2.ckpt".format(training_version)
+    load_version = 0
+    training_version = 1
+    if load_version != 0:
+        restore_path = "res/new_weight/{}/LunarLander-v2.ckpt".format(load_version)
+    else:
+        restore_path = None
+
+    save_path = "res/new_weight/{}/LunarLander-v2.ckpt".format(training_version)
 
     min_reward = -200
     time_limit = 60
@@ -21,10 +26,10 @@ if __name__ == "__main__":
     model = Network(x_shape=env.observation_space.shape[0],
                     y_shape=env.action_space.n,
                     learning_rate=0.02,
-                    gamma=0.7,
+                    gamma=0.8,
                     restore_path=restore_path)
 
-
+    dataset = Dataset()
     for epoch in range(current_epoch, epochs_count):
 
         state = env.reset()
@@ -70,8 +75,10 @@ if __name__ == "__main__":
                 print("Max reward during train: ", max_reward)
                 print("-----------------------")
 
-                model.fit(episode_actions=epoche_actions, episode_rewards=epoche_rewards,
-                                                          episode_observations=epoche_observations)
+                dataset.append(epoche_observations, epoche_actions, epoche_rewards)
+
+                model.fit(dataset)
+
                 epoche_observations = []
                 epoche_actions = []
                 epoche_rewards = []
