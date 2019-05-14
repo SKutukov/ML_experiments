@@ -22,7 +22,7 @@ class Network:
         return action
 
     def fit(self, dataset):
-        for episode_observations, episode_actions, episode_rewards in dataset.data[-1:-10]:
+        for episode_observations, episode_actions, episode_rewards in dataset.get_data():
 
             self.sess.run(self.train_op, feed_dict={
                 self.X: np.vstack(episode_observations).T,

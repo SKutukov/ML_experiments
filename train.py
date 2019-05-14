@@ -5,13 +5,13 @@ import time
 from dataset import Dataset
 if __name__ == "__main__":
 
-    is_render = True
+    is_render = False 
     current_epoch = 0
     epochs_count = 15000
     max_reward = -200
     env = LunarLander()
 
-    load_version = 0
+    load_version = 0 
     training_version = 1
     if load_version != 0:
         restore_path = "res/new_weight/{}/LunarLander-v2.ckpt".format(load_version)
@@ -25,8 +25,8 @@ if __name__ == "__main__":
 
     model = Network(x_shape=env.observation_space.shape[0],
                     y_shape=env.action_space.n,
-                    learning_rate=0.02,
-                    gamma=0.8,
+                    learning_rate=0.05,
+                    gamma=0.9,
                     restore_path=restore_path)
 
     dataset = Dataset()
