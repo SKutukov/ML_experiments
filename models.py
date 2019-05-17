@@ -21,14 +21,18 @@ class Network:
         action = np.random.choice(range(len(prob_weights.ravel())), p=prob_weights.ravel())
         return action
 
-    def fit(self, dataset):
-        for episode_observations, episode_actions, episode_rewards in dataset.get_data():
-
-            self.sess.run(self.train_op, feed_dict={
-                self.X: np.vstack(episode_observations).T,
-                self.Y: np.vstack(np.array(episode_actions)).T,
-                self.epoch_rewards: self.calc_reward(episode_rewards),
-            })
+    def fit(self, epoche_observations, epoche_actions, epoche_rewards, repl_buffer):
+        self.sess.run(self.train_op, feed_dict={
+            self.X: np.vstack(epoche_observations).T,
+            self.Y: np.vstack(np.array(epoche_actions)).T,
+            self.epoch_rewards: self.calc_reward(epoche_rewards),
+        })
+        repl_buffer_observations, repl_buffer_actions, repl_buffer_rewards = repl_buffer.get_data(10)
+        self.sess.run(self.train_op, feed_dict={
+            self.X: np.vstack(repl_buffer_observations).T,
+            self.Y: np.vstack(np.array(repl_buffer_actions)).T,
+            self.epoch_rewards: np.array(repl_buffer_rewards),
+        })
 
 
     def save_model(self, save_path):
@@ -41,8 +45,9 @@ class Network:
         for t in reversed(range(len(episode_rewards))):
             running_add = running_add * self.gamma + episode_rewards[t]
             discounted_reward[t] = running_add
-        discounted_reward -= np.mean(discounted_reward)
-        discounted_reward /= np.std(discounted_reward)	
+       
+       # discounted_reward -= np.mean(discounted_reward)
+       # discounted_reward /= np.std(discounted_reward)	
         return discounted_reward
 
 
