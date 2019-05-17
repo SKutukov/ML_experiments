@@ -25,9 +25,9 @@ class Network:
         self.sess.run(self.train_op, feed_dict={
             self.X: np.vstack(epoche_observations).T,
             self.Y: np.vstack(np.array(epoche_actions)).T,
-            self.epoch_rewards: self.calc_reward(epoche_rewards),
+            self.epoch_rewards: epoche_rewards,
         })
-        repl_buffer_observations, repl_buffer_actions, repl_buffer_rewards = repl_buffer.get_data(10)
+        repl_buffer_observations, repl_buffer_actions, repl_buffer_rewards = repl_buffer.get_data(100)
         self.sess.run(self.train_op, feed_dict={
             self.X: np.vstack(repl_buffer_observations).T,
             self.Y: np.vstack(np.array(repl_buffer_actions)).T,
@@ -46,8 +46,8 @@ class Network:
             running_add = running_add * self.gamma + episode_rewards[t]
             discounted_reward[t] = running_add
        
-       # discounted_reward -= np.mean(discounted_reward)
-       # discounted_reward /= np.std(discounted_reward)	
+        discounted_reward -= np.mean(discounted_reward)
+        discounted_reward /= np.std(discounted_reward)	
         return discounted_reward
 
 

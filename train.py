@@ -5,9 +5,9 @@ import time
 from dataset import ReplayBuffer
 if __name__ == "__main__":
 
-    is_render = True 
+    is_render = False 
     current_epoch = 0
-    epochs_count = 1000
+    epochs_count = 10000
     max_reward = -200
     env = LunarLander()
 
@@ -25,7 +25,7 @@ if __name__ == "__main__":
 
     model = Network(x_shape=env.observation_space.shape[0],
                     y_shape=env.action_space.n,
-                    learning_rate=0.0002,
+                    learning_rate=0.00002,
                     gamma=0.5,
                     restore_path=restore_path)
 
@@ -74,7 +74,7 @@ if __name__ == "__main__":
                 print("Reward: ", episode_rewards_sum)
                 print("Max reward during train: ", max_reward)
                 print("-----------------------")
-
+                epoche_rewards = model.calc_reward(epoche_rewards)
                 replBuffer.append(epoche_observations, epoche_actions, epoche_rewards)
 
                 model.fit(epoche_observations, epoche_actions, epoche_rewards, replBuffer)
