@@ -3,16 +3,19 @@ import numpy as np
 from models import Network
 import time
 from dataset import ReplayBuffer
+from heuristic import heuristic
+
+
 if __name__ == "__main__":
 
     is_render = True 
     current_epoch = 0
-    epochs_count = 10000
+    epochs_count = 1000
     max_reward = -200
     env = LunarLander()
 
-    load_version = 3
-    training_version = 4
+    load_version = 2
+    training_version = 5
     if load_version != 0:
         restore_path = "res/last_weight/{}/LunarLander-v2.ckpt".format(load_version)
     else:
@@ -52,8 +55,9 @@ if __name__ == "__main__":
             if time.clock() - time_begin > time_limit:
                 action = 0
 
-            #if  state[1] < 0.01:
-            #    action = 0
+            # replace neural metworc with heuristic algorithm on low vertical coordinate
+            if state[1] < 0.1:
+                action = heuristic(env, state)
 
             state_, reward, done, info = env.step(action)
 

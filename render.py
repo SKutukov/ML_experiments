@@ -42,12 +42,13 @@ if __name__ == "__main__":
                         gamma=0.99,
                         restore_path=weight_path)
 
-    for i in range(1, 5):
+    for i in range(1, 10):
         total_reward = 0
         steps = 0
         s = env.reset()
         epoche_rewards = []
         start = time.clock()
+        print("iteration: ", i )
 
         while True:
             env.render()
@@ -59,8 +60,9 @@ if __name__ == "__main__":
                 a = model.predict(s)
 
             state_, reward, done, info = env.step(a)
-            epoche_rewards.append(reward)    
-           
+            epoche_rewards.append(reward)
+
+            print("reward ", reward, "action ", a )
             episode_rewards_sum = sum(epoche_rewards)
             if episode_rewards_sum < -200:
                 done = True
