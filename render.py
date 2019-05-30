@@ -57,7 +57,11 @@ if __name__ == "__main__":
             if is_heuristic:
                  a = heuristic(env, s)
             else:
-                a = model.predict(s)
+                 a = model.predict(s)
+
+            # replace neural metworc with heuristic algorithm on low vertical coordinate
+            #if s[1] < 0.1:
+            #    a = heuristic(env, s)
 
             state_, reward, done, info = env.step(a)
             epoche_rewards.append(reward)

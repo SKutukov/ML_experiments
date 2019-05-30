@@ -4,32 +4,33 @@ from models import Network
 import time
 from dataset import ReplayBuffer
 from heuristic import heuristic
+import random
 
 
 if __name__ == "__main__":
 
-    is_render = True 
+    is_render = True
     current_epoch = 0
-    epochs_count = 1000
+    epochs_count = 100000
     max_reward = -200
     env = LunarLander()
 
-    load_version = 2
-    training_version = 5
+    load_version = 0
+    training_version = 1
     if load_version != 0:
-        restore_path = "res/last_weight/{}/LunarLander-v2.ckpt".format(load_version)
+        restore_path = "res/hybriteModel/{}/LunarLander-v2.ckpt".format(load_version)
     else:
-        restore_path = "res/weights_lr/4/LunarLander-v2.ckpt"
+        restore_path = "res/last_weight/2/LunarLander-v2.ckpt"
 
-    save_path = "res/last_weight/{}/LunarLander-v2.ckpt".format(training_version)
+    save_path = "res/hybriteModel/{}/LunarLander-v2.ckpt".format(training_version)
 
     min_reward = -200
     time_limit = 5
 
     model = Network(x_shape=env.observation_space.shape[0],
                     y_shape=env.action_space.n,
-                    learning_rate=0.00002,
-                    gamma=0.95,
+                    learning_rate=0.0002,
+                    gamma=0.99,
                     restore_path=restore_path)
 
     replBuffer = ReplayBuffer()
@@ -56,7 +57,7 @@ if __name__ == "__main__":
                 action = 0
 
             # replace neural metworc with heuristic algorithm on low vertical coordinate
-            if state[1] < 0.1:
+            if state[1] < 0.5 and random.random() > 0.5:
                 action = heuristic(env, state)
 
             state_, reward, done, info = env.step(action)
