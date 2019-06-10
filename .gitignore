@@ -1,0 +1,9 @@
+.idea/*
+*.swp
+.vscode/*
+*__pycache__/*
+venv/*
+env/*
+gym-results
+logs/*
+.ipynb_checkpoints/*
